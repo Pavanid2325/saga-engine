@@ -1,0 +1,85 @@
+{
+  "name": "@saga-engine/core",
+  "version": "0.1.0",
+  "description": "Transactional middleware for AI agents - Saga pattern with automatic rollback",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "saga",
+    "saga-pattern",
+    "transaction",
+    "rollback",
+    "compensation",
+    "ai-agents",
+    "langchain",
+    "vercel-ai",
+    "distributed-transactions",
+    "microservices",
+    "orchestrator",
+    "workflow",
+    "typescript"
+  ],
+  "author": "Saga Engine Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saga-engine/saga-engine.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://saga-engine.dev",
+  "bugs": {
+    "url": "https://github.com/saga-engine/saga-engine/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/saga-engine"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "tsup": "^8.0.0",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

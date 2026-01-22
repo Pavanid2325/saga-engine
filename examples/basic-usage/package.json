@@ -1,0 +1,16 @@
+{
+  "name": "basic-usage-example",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "start:failure": "tsx src/failure-example.ts"
+  },
+  "dependencies": {
+    "@saga-engine/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}

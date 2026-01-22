@@ -1,0 +1,33 @@
+{
+  "name": "saga-engine",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "description": "Transactional middleware for AI agents - Ctrl+Z for the real world",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saga-engine/saga-engine.git"
+  },
+  "homepage": "https://saga-engine.dev",
+  "bugs": {
+    "url": "https://github.com/saga-engine/saga-engine/issues"
+  },
+  "author": "Saga Engine Contributors",
+  "license": "MIT",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "test:coverage": "turbo run test:coverage",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "pnpm build"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
