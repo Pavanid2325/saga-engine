@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Initial release of `@saga-engine/core`
+## [0.1.1] - 2024-01-23
 
-## [0.1.0] - 2024-01-XX
+### Fixed
+- Added README.md to npm package
+- Updated branding to Verto AI LLC
+- Updated URLs to saga.shopengenie.com
+
+## [0.1.0] - 2024-01-23
 
 ### Added
 
@@ -66,5 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **0.1.0** - Initial public release
 
-[Unreleased]: https://github.com/Chetan-svg/saga-engine/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Chetan-svg/saga-engine/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Chetan-svg/saga-engine/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Chetan-svg/saga-engine/releases/tag/v0.1.0
