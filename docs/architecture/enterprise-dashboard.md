@@ -6,7 +6,7 @@ The Enterprise Dashboard is a hosted SaaS offering that provides state managemen
 
 **Business Model:** Product-Led Growth (PLG)
 - **Free:** Open-source SDK (`@saga-engine/core`) for local development
-- **Paid:** Hosted dashboard with durable storage, monitoring, and team features
+- **Paid:** Hosted dashboard at [saga.shopengenie.com](https://saga.shopengenie.com) with durable storage, monitoring, and team features
 
 ## Target Users
 

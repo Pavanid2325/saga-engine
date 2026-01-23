@@ -18,7 +18,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/saga-engine.git
+   git clone https://github.com/Chetan-svg/saga-engine.git
    cd saga-engine
    ```
 3. Install dependencies:
@@ -214,8 +214,8 @@ Include:
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/saga-engine/saga-engine/discussions)
-- Join our [Discord](https://discord.gg/saga-engine)
+- Open a [GitHub Issue](https://github.com/Chetan-svg/saga-engine/issues)
+- Email us at [chetan@shopengenie.com](mailto:chetan@shopengenie.com)
 
 ## License
 

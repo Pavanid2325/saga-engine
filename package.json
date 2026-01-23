@@ -5,13 +5,13 @@
   "description": "Transactional middleware for AI agents - Ctrl+Z for the real world",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saga-engine/saga-engine.git"
+    "url": "https://github.com/Chetan-svg/saga-engine.git"
   },
-  "homepage": "https://saga-engine.dev",
+  "homepage": "https://saga.shopengenie.com",
   "bugs": {
-    "url": "https://github.com/saga-engine/saga-engine/issues"
+    "url": "https://github.com/Chetan-svg/saga-engine/issues"
   },
-  "author": "Saga Engine Contributors",
+  "author": "Verto AI LLC <chetan@shopengenie.com>",
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",

@@ -47,20 +47,16 @@
     "workflow",
     "typescript"
   ],
-  "author": "Saga Engine Contributors",
+  "author": "Verto AI LLC <chetan@shopengenie.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/saga-engine/saga-engine.git",
+    "url": "https://github.com/Chetan-svg/saga-engine.git",
     "directory": "packages/core"
   },
-  "homepage": "https://saga-engine.dev",
+  "homepage": "https://saga.shopengenie.com",
   "bugs": {
-    "url": "https://github.com/saga-engine/saga-engine/issues"
-  },
-  "funding": {
-    "type": "github",
-    "url": "https://github.com/sponsors/saga-engine"
+    "url": "https://github.com/Chetan-svg/saga-engine/issues"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
