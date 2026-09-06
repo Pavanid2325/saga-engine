@@ -21,6 +21,7 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
+    "ui": "pnpm --filter @saga-engine/web-demo dev",
     "prepare": "pnpm build"
   },
   "devDependencies": {

@@ -9,6 +9,9 @@ export { InMemoryStore } from './stores/memory.js';
 
 // Types
 export type {
+  FailurePolicy,
+  ResidualArtifact,
+  ExecutionOptions,
   SagaStatus,
   StepStatus,
   SagaContext,
@@ -16,6 +19,7 @@ export type {
   StepState,
   SagaState,
   SagaSuccess,
+  SagaPartialCompletion,
   SagaFailure,
   SagaResult,
   CompensationFailureStrategy,

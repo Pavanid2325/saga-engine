@@ -1,7 +1,36 @@
 /**
+ * Failure policy for a saga execution
+ * - PARTIAL_COMPLETION: Keep successful steps, skip rollback/compensation, and report residual state
+ * - ROLLBACK: Undo completed steps in reverse order (reusing compensation mechanism)
+ */
+export type FailurePolicy = 'PARTIAL_COMPLETION' | 'ROLLBACK';
+
+/**
+ * Residual artifact/access state when compensation is skipped or partial completion occurs
+ */
+export interface ResidualArtifact {
+  system: string;
+  resource: string;
+  state: string;
+  reason: string;
+}
+
+/**
+ * Options provided when executing a saga instance
+ */
+export interface ExecutionOptions {
+  /** Workflow type identifier, e.g. 'provisioning' or 'revocation' */
+  workflowType?: string;
+  /** Workflow failure policy override */
+  failurePolicy?: FailurePolicy;
+  /** Explicit user confirmation when selecting ROLLBACK policy for revocation workflows */
+  confirmRollback?: boolean;
+}
+
+/**
  * Status of a saga execution
  */
-export type SagaStatus = 'running' | 'completed' | 'compensating' | 'failed';
+export type SagaStatus = 'running' | 'completed' | 'compensating' | 'failed' | 'partial_completion';
 
 /**
  * Status of an individual step within a saga
@@ -76,6 +105,8 @@ export interface SagaState {
 export interface SagaSuccess<TResult = unknown> {
   success: true;
   sagaId: string;
+  workflow?: string;
+  failurePolicy?: FailurePolicy;
   /** Final result from the last step */
   result: TResult;
   /** Results from all steps, keyed by step name */
@@ -83,11 +114,39 @@ export interface SagaSuccess<TResult = unknown> {
 }
 
 /**
- * Result of a failed saga execution
+ * Result of a saga execution with partial completion policy (rollback skipped)
+ */
+export interface SagaPartialCompletion {
+  success: false;
+  sagaId: string;
+  workflow: string;
+  status: 'PARTIAL_COMPLETION';
+  failurePolicy: 'PARTIAL_COMPLETION';
+  /** Error that caused the step failure */
+  error: Error;
+  /** Name of the step that failed */
+  failedStep: string;
+  /** Steps that completed successfully before failure */
+  completedSteps: string[];
+  /** Residual artifacts/resources that remain active */
+  residualArtifacts: ResidualArtifact[];
+  /** Always false for partial completion */
+  compensated: false;
+  /** Explanation of why rollback was skipped */
+  rollbackSkippedReason: string;
+  /** Recommended next action for operator/agent */
+  recommendedNextAction: string;
+}
+
+/**
+ * Result of a failed saga execution (with optional rollback)
  */
 export interface SagaFailure {
   success: false;
   sagaId: string;
+  workflow?: string;
+  failurePolicy?: FailurePolicy;
+  status?: string;
   /** Error that caused the failure */
   error: Error;
   /** Name of the step that failed */
@@ -96,12 +155,17 @@ export interface SagaFailure {
   compensated: boolean;
   /** Any errors that occurred during compensation */
   compensationErrors?: Array<{ step: string; error: Error }>;
+  /** Residual artifacts if any */
+  residualArtifacts?: ResidualArtifact[];
 }
 
 /**
  * Result of saga execution
  */
-export type SagaResult<TResult = unknown> = SagaSuccess<TResult> | SagaFailure;
+export type SagaResult<TResult = unknown> =
+  | SagaSuccess<TResult>
+  | SagaPartialCompletion
+  | SagaFailure;
 
 /**
  * How to handle failures during compensation
@@ -134,4 +198,5 @@ export interface SagaEvents {
   'compensation:step': (state: SagaState, stepName: string) => void;
   'compensation:completed': (state: SagaState) => void;
   'compensation:failed': (state: SagaState, stepName: string, error: Error) => void;
+  'compensation:skipped': (state: SagaState, reason: string) => void;
 }

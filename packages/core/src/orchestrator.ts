@@ -7,36 +7,18 @@ import type {
   SagaResult,
   SagaSuccess,
   SagaFailure,
+  SagaPartialCompletion,
+  ExecutionOptions,
+  ResidualArtifact,
   OrchestratorOptions,
   SagaEvents,
   CompensationFailureStrategy,
-  StepState,
 } from './types.js';
 
 type EventCallback<K extends keyof SagaEvents> = SagaEvents[K];
 
 /**
- * Orchestrator for executing sagas with automatic compensation on failure
- *
- * @example
- * ```typescript
- * const orchestrator = new SagaOrchestrator({
- *   store: new InMemoryStore(),
- *   onCompensationFailure: 'retry',
- *   compensationRetries: 3
- * });
- *
- * const result = await orchestrator.execute(bookTripSaga, {
- *   flight: { from: 'NYC', to: 'LAX' },
- *   hotel: { city: 'LAX', nights: 3 }
- * });
- *
- * if (result.success) {
- *   console.log('Trip booked!', result.stepResults);
- * } else {
- *   console.log('Booking failed:', result.error);
- * }
- * ```
+ * Orchestrator for executing sagas with automatic compensation on failure or partial completion policies
  */
 export class SagaOrchestrator {
   private readonly store: StateStore;
@@ -54,18 +36,28 @@ export class SagaOrchestrator {
   }
 
   /**
-   * Execute a saga with the given input
+   * Execute a saga with the given input and execution options
    *
    * @param saga - The saga definition to execute
    * @param input - Input data passed to all steps
-   * @returns Result indicating success or failure with compensation status
+   * @param options - Execution options (e.g. failurePolicy, workflowType, confirmRollback)
+   * @returns Result indicating success, partial completion, or failure with compensation status
    */
   async execute<TInput, TResult>(
     saga: Saga<TInput>,
-    input: TInput
+    input: TInput,
+    options?: ExecutionOptions
   ): Promise<SagaResult<TResult>> {
     if (!saga.hasSteps()) {
       throw new Error(`Saga "${saga.name}" has no steps defined`);
+    }
+
+    const workflowType = options?.workflowType || (saga.name.includes('revocat') ? 'revocation' : 'provisioning');
+    const failurePolicy = options?.failurePolicy || (workflowType === 'revocation' ? 'PARTIAL_COMPLETION' : 'ROLLBACK');
+
+    // Rule: Rollback confirmation required when ROLLBACK policy is chosen for revocation workflows
+    if (workflowType === 'revocation' && failurePolicy === 'ROLLBACK' && !options?.confirmRollback) {
+      throw new Error('Rollback confirmation required for revocation policy ROLLBACK');
     }
 
     const sagaId = randomUUID();
@@ -121,8 +113,28 @@ export class SagaOrchestrator {
 
         this.emit('step:failed', state, step.name, err);
 
-        // Trigger compensation
-        return this.compensate(sagaId, saga, context, executedSteps, step.name, err);
+        // Branching based on Failure Policy
+        if (failurePolicy === 'PARTIAL_COMPLETION') {
+          return this.handlePartialCompletion(
+            sagaId,
+            saga,
+            workflowType,
+            executedSteps,
+            step.name,
+            err
+          );
+        } else {
+          return this.compensate(
+            sagaId,
+            saga,
+            context,
+            executedSteps,
+            step.name,
+            err,
+            workflowType,
+            failurePolicy
+          );
+        }
       }
     }
 
@@ -140,9 +152,58 @@ export class SagaOrchestrator {
     return {
       success: true,
       sagaId,
+      workflow: workflowType,
+      failurePolicy,
       result: finalResult as TResult,
       stepResults,
     } satisfies SagaSuccess<TResult>;
+  }
+
+  /**
+   * Handle step failure under PARTIAL_COMPLETION policy (no compensation)
+   */
+  private async handlePartialCompletion<TInput>(
+    sagaId: string,
+    saga: Saga<TInput>,
+    workflowType: string,
+    executedSteps: Array<{ step: SagaStep<TInput, unknown>; result: unknown }>,
+    failedStepName: string,
+    originalError: Error
+  ): Promise<SagaPartialCompletion> {
+    await this.store.updateStatus(sagaId, 'failed', new Date());
+
+    const state = await this.store.get(sagaId);
+    const reason = 'Compensation could restore previously revoked access';
+    if (state) {
+      this.emit('compensation:skipped', state, reason);
+      this.emit('saga:failed', state, originalError);
+    }
+
+    // Create residual artifacts for failed step
+    const systemName = failedStepName.replace(/^revoke-/, '').replace(/-/g, ' ').toUpperCase();
+    const residualArtifacts: ResidualArtifact[] = [
+      {
+        system: systemName.startsWith('SYSTEM') ? systemName : `System ${systemName}`,
+        resource: 'user-access',
+        state: 'still_active',
+        reason: `Revocation step "${failedStepName}" failed: ${originalError.message}`,
+      },
+    ];
+
+    return {
+      success: false,
+      sagaId,
+      workflow: workflowType,
+      status: 'PARTIAL_COMPLETION',
+      failurePolicy: 'PARTIAL_COMPLETION',
+      error: originalError,
+      failedStep: failedStepName,
+      completedSteps: executedSteps.map((s) => s.step.name),
+      residualArtifacts,
+      compensated: false,
+      rollbackSkippedReason: reason,
+      recommendedNextAction: `Retry revocation for ${failedStepName}`,
+    };
   }
 
   /**
@@ -154,7 +215,9 @@ export class SagaOrchestrator {
     context: SagaContext<TInput>,
     executedSteps: Array<{ step: SagaStep<TInput, unknown>; result: unknown }>,
     failedStepName: string,
-    originalError: Error
+    originalError: Error,
+    workflowType: string = 'provisioning',
+    failurePolicy: 'ROLLBACK' | 'PARTIAL_COMPLETION' = 'ROLLBACK'
   ): Promise<SagaFailure> {
     await this.store.updateStatus(sagaId, 'compensating');
 
@@ -197,7 +260,6 @@ export class SagaOrchestrator {
         if (this.compensationStrategy === 'halt') {
           break;
         }
-        // 'continue' strategy: keep going with other compensations
       }
     }
 
@@ -209,13 +271,15 @@ export class SagaOrchestrator {
       if (compensationErrors.length === 0) {
         this.emit('compensation:completed', finalState);
       }
-      // Always emit saga:failed since we're in the compensation path (saga failed)
       this.emit('saga:failed', finalState, originalError);
     }
 
     return {
       success: false,
       sagaId,
+      workflow: workflowType,
+      failurePolicy,
+      status: 'ROLLED_BACK',
       error: originalError,
       failedStep: failedStepName,
       compensated: compensationErrors.length === 0,
@@ -256,17 +320,14 @@ export class SagaOrchestrator {
 
   /**
    * Recover and resume pending sagas from the store
-   * Call this on application startup to handle crash recovery
    */
   async recover(): Promise<void> {
     const pendingSagas = await this.store.getPendingSagas();
 
     for (const state of pendingSagas) {
       if (state.status === 'compensating') {
-        // Resume compensation from where it left off
         await this.resumeCompensation(state);
       } else if (state.status === 'running') {
-        // Mark as failed and trigger compensation
         await this.store.updateStatus(state.id, 'compensating');
         await this.resumeCompensation(state);
       }
@@ -277,15 +338,6 @@ export class SagaOrchestrator {
    * Resume compensation for a saga from stored state
    */
   private async resumeCompensation(state: SagaState): Promise<void> {
-    const executedSteps = state.steps
-      .filter((s) => s.status === 'executed')
-      .map((s) => ({
-        name: s.name,
-        result: s.result,
-      }));
-
-    // We don't have the saga definition here, so we can only mark as failed
-    // Full recovery would require re-registering sagas
     await this.store.updateStatus(state.id, 'failed', new Date());
   }
 
