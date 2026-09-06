@@ -421,44 +421,4 @@ interface StepDefinition<TInput, TResult> {
 }
 ```
 
-## Enterprise Features
 
-Looking for advanced features? Check out [Saga Engine Cloud](https://saga.shopengenie.com):
-
-- **Hosted State Management** — Durable storage with global replication
-- **Observability Dashboard** — Real-time monitoring, tracing, and analytics
-- **Team Collaboration** — Role-based access control and audit logs
-- **SLA Guarantees** — 99.99% uptime with dedicated support
-
-[Contact us for Enterprise pricing →](mailto:chetan@shopengenie.com)
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-```bash
-# Clone the repository
-git clone https://github.com/Chetan-svg/saga-engine.git
-cd saga-engine
-
-# Install dependencies
-pnpm install
-
-# Run tests
-pnpm test
-
-# Build
-pnpm build
-```
-
-## License
-
-MIT © [Verto AI LLC](https://shopengenie.com)
-
----
-
-<p align="center">
-  <a href="https://saga.shopengenie.com">Website</a> •
-  <a href="https://saga.shopengenie.com/docs">Documentation</a> •
-  <a href="https://github.com/Chetan-svg/saga-engine/issues">Issues</a>
-</p>
